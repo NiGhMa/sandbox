@@ -1,2 +1,2 @@
-# sandbox-cicd
-Just a sandbox for testing CICD tools
+# sandbox
+Just a sandbox for testing
