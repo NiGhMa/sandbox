@@ -39,13 +39,10 @@ class EmployeeController {
     // Single item
 
     @GetMapping("/employees/{id}")
-    HttpEntity<Employee> one(@PathVariable Long id) {
+    Employee one(@PathVariable Long id) {
 
-        Employee employee = repository.findById(id)
+        return repository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
-        employee.add
-
-        return new ResponseEntity<>(employee, HttpStatus.OK);
     }
 
     @PutMapping("/employees/{id}")
