@@ -15,9 +15,9 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class OrderController {
 
     private final OrderRepository repository;
-    private final OrderResourceAssembler assembler;
+    private final OrderModelAssembler assembler;
 
-    OrderController(OrderRepository repository, OrderResourceAssembler assembler) {
+    OrderController(OrderRepository repository, OrderModelAssembler assembler) {
         this.repository = repository;
         this.assembler = assembler;
     }

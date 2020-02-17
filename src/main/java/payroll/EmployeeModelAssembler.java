@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-class EmployeeResourceAssembler implements RepresentationModelAssembler<Employee, EntityModel<Employee>> {
+class EmployeeModelAssembler implements RepresentationModelAssembler<Employee, EntityModel<Employee>> {
 
     @Override
     public CollectionModel<EntityModel<Employee>> toCollectionModel(Iterable<? extends Employee> entities) {
