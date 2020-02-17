@@ -1,18 +1,23 @@
 package payroll;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceAssembler;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 
 @Component
-public class OrderResourceAssembler implements ResourceAssembler<Order, Resource<Order>> {
+public class OrderResourceAssembler implements RepresentationModelAssembler<Order, EntityModel<Order>> {
 
     @Override
-    public Resource<Order> toResource(Order order) {
-        Resource<Order> orderResource = new Resource<>(order,
+    public EntityModel<Order> toModel(Order order) {
+        EntityModel<Order> orderResource = new EntityModel<>(order,
                 linkTo(methodOn(OrderController.class).one(order.getId())).withSelfRel(),
                 linkTo(methodOn(OrderController.class).all()).withRel("orders"));
 
@@ -22,5 +27,16 @@ public class OrderResourceAssembler implements ResourceAssembler<Order, Resource
         }
 
         return orderResource;
+    }
+
+    @Override
+    public CollectionModel<EntityModel<Order>> toCollectionModel(Iterable<? extends Order> entities) {
+        List<EntityModel<Order>> orders = new ArrayList<>();
+        for (Order order : entities) {
+            orders.add(this.toModel(order));
+        }
+
+        return new CollectionModel<>(orders,
+                linkTo(methodOn(OrderController.class).all()).withSelfRel());
     }
 }

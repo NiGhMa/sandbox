@@ -1,17 +1,15 @@
 package payroll;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.VndErrors;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.mediatype.vnderrors.VndErrors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 public class OrderController {
@@ -25,32 +23,31 @@ public class OrderController {
     }
 
     @GetMapping("/orders")
-    Resources<Resource<Order>> all() {
-        List<Resource<Order>> orders = repository.findAll().stream().map(assembler::toResource).collect(Collectors.toList());
+    CollectionModel<EntityModel<Order>> all() {
 
-        return new Resources<>(orders, linkTo(methodOn(OrderController.class).all()).withSelfRel());
+        return assembler.toCollectionModel(repository.findAll());
     }
 
     @GetMapping("/orders/{id}")
-    Resource<Order> one(@PathVariable Long id) {
-        return assembler.toResource(repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id)));
+    EntityModel<Order> one(@PathVariable Long id) {
+        return assembler.toModel(repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id)));
     }
 
     @PostMapping("/orders")
-    ResponseEntity<Resource<Order>> newOrder(@RequestBody Order order) {
+    ResponseEntity<EntityModel<Order>> newOrder(@RequestBody Order order) {
         order.setStatus(Status.IN_PROGRESS);
         Order newOrder = repository.save(order);
         return ResponseEntity
                 .created(linkTo(methodOn(OrderController.class).one(order.getId())).toUri())
-                .body(assembler.toResource(newOrder));
+                .body(assembler.toModel(newOrder));
     }
 
     @DeleteMapping("/orders/{id}/cancel")
-    ResponseEntity<ResourceSupport> cancel(@PathVariable Long id) {
+    ResponseEntity<RepresentationModel> cancel(@PathVariable Long id) {
         Order order = repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
         if (order.getStatus() == Status.IN_PROGRESS) {
             order.setStatus(Status.CANCELLED);
-            return ResponseEntity.ok(assembler.toResource(repository.save(order)));
+            return ResponseEntity.ok(assembler.toModel(repository.save(order)));
         }
 
         return ResponseEntity
@@ -59,11 +56,11 @@ public class OrderController {
     }
 
     @PutMapping("/orders/{id}/complete")
-    ResponseEntity<ResourceSupport> complete(@PathVariable Long id) {
+    ResponseEntity<RepresentationModel> complete(@PathVariable Long id) {
         Order order = repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
         if (order.getStatus() == Status.IN_PROGRESS) {
             order.setStatus(Status.COMPLETED);
-            return ResponseEntity.ok(assembler.toResource(repository.save(order)));
+            return ResponseEntity.ok(assembler.toModel(repository.save(order)));
         }
 
         return ResponseEntity

@@ -1,23 +1,13 @@
 package payroll;
 
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
-
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 class EmployeeController {
@@ -34,35 +24,30 @@ class EmployeeController {
     // Aggregate root
 
     @GetMapping("/employees")
-    Resources<Resource<Employee>> all() {
+    CollectionModel<EntityModel<Employee>> all() {
 
-        List<Resource<Employee>> employees = repository.findAll().stream()
-                .map(assembler::toResource)
-                .collect(Collectors.toList());
-
-        return new Resources<>(employees,
-                linkTo(methodOn(EmployeeController.class).all()).withSelfRel());
+        return assembler.toCollectionModel(repository.findAll());
     }
 
     @PostMapping("/employees")
     ResponseEntity<?> newEmployee(@RequestBody Employee newEmployee) throws URISyntaxException {
 
-        Resource<Employee> resource = assembler.toResource(repository.save(newEmployee));
+        EntityModel<Employee> resource = assembler.toModel(repository.save(newEmployee));
 
         return ResponseEntity
-                .created(new URI(resource.getId().expand().getHref()))
+                .created(new URI(resource.getLink("self").get().getHref()))
                 .body(resource);
     }
 
     // Single item
 
     @GetMapping("/employees/{id}")
-    Resource<Employee> one(@PathVariable Long id) {
+    EntityModel<Employee> one(@PathVariable Long id) {
 
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
 
-        return assembler.toResource(employee);
+        return assembler.toModel(employee);
     }
 
     @PutMapping("/employees/{id}")
@@ -82,14 +67,14 @@ class EmployeeController {
                     return repository.save(newEmployee);
                 });
 
-        Resource<Employee> resource = assembler.toResource(updatedEmployee);
+        EntityModel<Employee> resource = assembler.toModel(updatedEmployee);
 
         if (isUpdate.get()) {
             return ResponseEntity
                     .ok(resource);
         } else {
             return ResponseEntity
-                    .created(new URI(resource.getId().expand().getHref()))
+                    .created(new URI(resource.getLink("self").get().getHref()))
                     .body(resource);
         }
     }
